@@ -26,7 +26,6 @@ body{margin:0;background:var(--gris);padding:12px;}
   box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* TRANSICIÓN */
 .fade{
   opacity:0;
   transform:translateY(10px);
@@ -70,12 +69,11 @@ button:hover{background:var(--verde-oscuro)}
   border-radius:10px;
 }
 
+.hidden{display:none}
 
 #paso1, #paso2{
   transition: all 0.3s ease;
 }
-.hidden{display:none}
-
 </style>
 </head>
 
@@ -86,21 +84,10 @@ button:hover{background:var(--verde-oscuro)}
   <h2>Control EPP</h2>
   <button onclick="verPedido()">Hacer pedido</button>
   <button onclick="verLogin()">Validar recepción</button>
-  <button onclick="verMisPedidos()">Ver mis pedidos</button>
 </div>
 
 <!-- PEDIDO -->
-<div class="card hidden" id="misPedidos">
-
-  <input id="dniConsulta" placeholder="Ingrese DNI">
-
-  <button onclick="buscarMisPedidos()">Buscar</button>
-
-  <div id="resultadoPedidos"></div>
-
-  <button onclick="volver()">Volver</button>
-
-</div>
+<div class="card hidden" id="pedido">
 
   <!-- PASO 1 -->
   <div id="paso1" class="fade show">
@@ -118,6 +105,8 @@ button:hover{background:var(--verde-oscuro)}
 
     <div id="infoConfirmado" style="font-weight:bold;margin-bottom:10px"></div>
 
+    <button onclick="verMisPedidosUsuario()">Ver mis pedidos</button>
+
     <div id="listaEPP"></div>
 
     <button onclick="enviar()">Enviar solicitud</button>
@@ -130,9 +119,20 @@ button:hover{background:var(--verde-oscuro)}
 
 </div>
 
+<!-- MIS PEDIDOS -->
+<div class="card hidden" id="misPedidosUsuario">
+
+  <div id="tituloPedidos" style="font-weight:bold;margin-bottom:10px"></div>
+
+  <div id="resultadoPedidos"></div>
+
+  <button onclick="volver()">Volver</button>
+
+</div>
+
 <script>
 
-const URL="https://script.google.com/macros/s/AKfycbzFUheppMgW0klFFy-fdMAOtrcLaVKjeXm8CK9_ejqfrtRAq48iz95JuzA_rBSMGQoi/exec";
+const URL="https://script.google.com/macros/s/AKfycbw50WzsCTuErQdWBPyyml5hEhxM5UgVNuXLukCPmRyhv5m0OoWvZ_Z-Xbkr69oNfG29/exec";
 let persona=null;
 
 // NAV
@@ -141,33 +141,25 @@ function toggle(id){
  document.getElementById(id).classList.remove("hidden")
 }
 
-function verPedido(){
- limpiarPedido();
- toggle("pedido");
-}
-
 function volver(){toggle("menu")}
 
-// TRANSICIÓN ENTRE PASOS
-function cambiarPaso(p1,p2){
+// PEDIDO
+function verPedido(){
 
-  const a = document.getElementById(p1);
-  const b = document.getElementById(p2);
+  toggle("pedido");
 
-  // ocultar paso 1
-  a.style.opacity = "0";
+  if(persona){
+    document.getElementById("infoConfirmado").innerHTML = `
+    ${persona.nombres} ${persona.apellidos} | ${persona.area} | Guardia ${persona.guardia}
+    `;
 
-  setTimeout(()=>{
-    a.style.display = "none";
+    document.getElementById("paso1").style.display = "none";
+    document.getElementById("paso2").style.display = "block";
+    document.getElementById("paso2").style.opacity = "1";
 
-    // mostrar paso 2
-    b.style.display = "block";
-
-    setTimeout(()=>{
-      b.style.opacity = "1";
-    },50);
-
-  },200);
+  }else{
+    limpiarPedido();
+  }
 }
 
 // LIMPIAR
@@ -176,17 +168,15 @@ function limpiarPedido(){
   dni.value="";
   info.innerHTML="";
   res.innerHTML="";
-  persona=null;
 
   document.getElementById("paso1").style.display = "block";
   document.getElementById("paso1").style.opacity = "1";
   
   document.getElementById("paso2").style.display = "none";
   document.getElementById("paso2").style.opacity = "0";
-  setTimeout(()=>document.getElementById("paso1").classList.add("show"),10);
 }
 
-// 🔥 VERIFICAR DNI
+// VERIFICAR DNI
 async function verificarDNI(){
 
  if(dni.value.length < 6){
@@ -202,7 +192,10 @@ async function verificarDNI(){
    return;
  }
 
- persona=d;
+ persona = {
+   ...d,
+   dni: dni.value
+ };
 
  info.innerHTML=`
  <b>${d.nombres} ${d.apellidos}</b><br>
@@ -212,10 +205,20 @@ async function verificarDNI(){
  `;
 }
 
-// VALIDAR EN VIVO (igual que ya tenías)
-async function validarUno(epp){
+// CONTINUAR
+function continuarPedido(){
 
- if(!dni.value) return;
+  document.getElementById("infoConfirmado").innerHTML = `
+  ${persona.nombres} ${persona.apellidos} | ${persona.area} | Guardia ${persona.guardia}
+  `;
+
+  document.getElementById("paso1").style.display = "none";
+  document.getElementById("paso2").style.display = "block";
+  document.getElementById("paso2").style.opacity = "1";
+}
+
+// VALIDAR EN VIVO
+async function validarUno(epp){
 
  const cantidad=document.getElementById("c_"+epp).value;
 
@@ -223,7 +226,7 @@ async function validarUno(epp){
   method:"POST",
   body:JSON.stringify({
     tipo:"validar",
-    dni:dni.value,
+    dni: persona.dni,
     epps:[{nombre:epp,cantidad:Number(cantidad)}]
   })
  });
@@ -242,10 +245,8 @@ async function validarUno(epp){
  }
 }
 
-// ENVIAR (igual que ya tienes)
+// ENVIAR
 async function enviar(){
-
- if(!persona){alert("DNI inválido");return;}
 
  let epps=[];
 
@@ -262,7 +263,7 @@ async function enviar(){
 
  const rVal=await fetch(URL,{
   method:"POST",
-  body:JSON.stringify({tipo:"validar",dni:dni.value,epps})
+  body:JSON.stringify({tipo:"validar",dni:persona.dni,epps})
  });
 
  const validacion=await rVal.json();
@@ -273,14 +274,69 @@ async function enviar(){
   return;
  }
 
- const r=await fetch(URL,{
+ await fetch(URL,{
   method:"POST",
-  body:JSON.stringify({tipo:"pedido",dni:dni.value,epps})
+  body:JSON.stringify({tipo:"pedido",dni:persona.dni,epps})
  });
 
- const d=await r.json();
-
  res.innerHTML="✔ Pedido enviado";
+}
+
+// MIS PEDIDOS
+function verMisPedidosUsuario(){
+
+  if(!persona){
+    alert("Primero verifica tu DNI");
+    return;
+  }
+
+  document.getElementById("tituloPedidos").innerHTML = `
+  ${persona.nombres} ${persona.apellidos}
+  `;
+
+  toggle("misPedidosUsuario");
+
+  cargarMisPedidos();
+}
+
+async function cargarMisPedidos(){
+
+  const r = await fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({
+      tipo:"mis_pedidos",
+      dni: persona.dni
+    })
+  });
+
+  const data = await r.json();
+
+  let html = "";
+
+  if(data.length == 0){
+    html = "No tienes pedidos";
+  }else{
+
+    data.forEach(x=>{
+
+      let color = "#999";
+
+      if(x.estado == "Pendiente") color = "orange";
+      if(x.estado == "Entregado") color = "green";
+      if(x.estado == "Rechazado") color = "red";
+
+      html += `
+      <div style="border-bottom:1px solid #eee;padding:10px">
+        <b>${x.epp}</b> (${x.cantidad})<br>
+        ${x.fecha}<br>
+        <span style="color:${color}">${x.estado}</span>
+      </div>
+      `;
+    });
+
+  }
+
+  resultadoPedidos.innerHTML = html;
 }
 
 // CARGAR EPP
@@ -303,62 +359,6 @@ async function cargarEPP(){
  listaEPP.innerHTML=html;
 }
 
-function continuarPedido(){
-
-  document.getElementById("infoConfirmado").innerHTML = `
-  ${persona.nombres} ${persona.apellidos} | ${persona.area} | Guardia ${persona.guardia}
-  `;
-
-  cambiarPaso("paso1","paso2");
-}
-
-function verMisPedidos(){
-  toggle("misPedidos");
-}
-
-async function buscarMisPedidos(){
-
-  const dni = document.getElementById("dniConsulta").value;
-
-  if(dni.length < 6){
-    alert("Ingrese DNI válido");
-    return;
-  }
-
-  const r = await fetch(URL,{
-    method:"POST",
-    body:JSON.stringify({tipo:"mis_pedidos",dni})
-  });
-
-  const data = await r.json();
-
-  let html = "";
-
-  if(data.length == 0){
-    html = "No tienes pedidos registrados";
-  }else{
-
-    data.forEach(x=>{
-
-      let color = "#999";
-
-      if(x.estado == "Pendiente") color = "orange";
-      if(x.estado == "Entregado") color = "green";
-      if(x.estado == "Rechazado") color = "red";
-
-      html += `
-      <div style="border-bottom:1px solid #eee;padding:8px">
-        <b>${x.epp}</b> (${x.cantidad})<br>
-        ${x.fecha}<br>
-        <span style="color:${color}">${x.estado}</span>
-      </div>
-      `;
-    });
-
-  }
-
-  resultadoPedidos.innerHTML = html;
-}
 cargarEPP();
 
 </script>
