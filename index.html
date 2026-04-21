@@ -192,18 +192,13 @@ async function verificarDNI(){
  }
 
  persona=d;
+
  info.innerHTML=`
  <b>${d.nombres} ${d.apellidos}</b><br>
  Área: ${d.area} | Guardia: ${d.guardia}
  <br><br>
  <button onclick="continuarPedido()">Continuar</button>
  `;
-
- document.getElementById("infoConfirmado").innerHTML=`
- ${d.nombres} ${d.apellidos} | ${d.area} | Guardia ${d.guardia}
- `;
-
- cambiarPaso("paso1","paso2");
 }
 
 // VALIDAR EN VIVO (igual que ya tenías)
