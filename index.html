@@ -70,7 +70,12 @@ button:hover{background:var(--verde-oscuro)}
   border-radius:10px;
 }
 
+
+#paso1, #paso2{
+  transition: all 0.3s ease;
+}
 .hidden{display:none}
+
 </style>
 </head>
 
@@ -98,7 +103,7 @@ button:hover{background:var(--verde-oscuro)}
   </div>
 
   <!-- PASO 2 -->
-  <div id="paso2" class="fade hidden">
+  <div id="paso2" style="display:none; opacity:0;">
 
     <div id="infoConfirmado" style="font-weight:bold;margin-bottom:10px"></div>
 
@@ -132,18 +137,24 @@ function verPedido(){
 
 function volver(){toggle("menu")}
 
-// 🔥 TRANSICIÓN ENTRE PASOS
+// TRANSICIÓN ENTRE PASOS
 function cambiarPaso(p1,p2){
-  const a=document.getElementById(p1);
-  const b=document.getElementById(p2);
 
-  a.classList.remove("show");
+  const a = document.getElementById(p1);
+  const b = document.getElementById(p2);
+
+  // ocultar paso 1
+  a.style.opacity = "0";
 
   setTimeout(()=>{
-    a.classList.add("hidden");
-    b.classList.remove("hidden");
+    a.style.display = "none";
 
-    setTimeout(()=>b.classList.add("show"),10);
+    // mostrar paso 2
+    b.style.display = "block";
+
+    setTimeout(()=>{
+      b.style.opacity = "1";
+    },50);
 
   },200);
 }
@@ -156,8 +167,11 @@ function limpiarPedido(){
   res.innerHTML="";
   persona=null;
 
-  document.getElementById("paso1").classList.remove("hidden","show");
-  document.getElementById("paso2").classList.add("hidden");
+  document.getElementById("paso1").style.display = "block";
+  document.getElementById("paso1").style.opacity = "1";
+  
+  document.getElementById("paso2").style.display = "none";
+  document.getElementById("paso2").style.opacity = "0";
   setTimeout(()=>document.getElementById("paso1").classList.add("show"),10);
 }
 
