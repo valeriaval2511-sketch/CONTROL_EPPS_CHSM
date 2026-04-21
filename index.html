@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Control EPP</title>
+
+<style>
+body{font-family:Arial;background:#f4f6f8;padding:20px}
+.card{background:white;padding:15px;border-radius:10px;margin-bottom:10px}
+button{width:100%;padding:10px;margin:5px 0}
+.hidden{display:none}
+.info{color:gray}
+</style>
+</head>
+
+<body>
+
+<div class="card" id="menu">
+<h2>Control EPP</h2>
+<button onclick="verPedido()">HACER PEDIDO</button>
+<button onclick="verLogin()">VALIDAR RECEPCIÓN</button>
+</div>
+
+<div class="card hidden" id="pedido">
+<input id="dni" placeholder="DNI" oninput="buscar()">
+<div id="info" class="info"></div>
+
+<label><input type="checkbox" id="Filtro"> Filtro</label>
+<input type="number" id="cFiltro" value="1">
+
+<label><input type="checkbox" id="Guantes"> Guantes</label>
+<input type="number" id="cGuantes" value="1">
+
+<button onclick="enviar()">Enviar</button>
+<button onclick="volver()">Volver</button>
+
+<div id="res"></div>
+</div>
+
+<div class="card hidden" id="login">
+<input id="user" placeholder="Usuario">
+<input id="pass" type="password" placeholder="Clave">
+<button onclick="login()">Ingresar</button>
+<button onclick="volver()">Volver</button>
+</div>
+
+<div class="card hidden" id="admin">
+<div id="lista"></div>
+<button onclick="volver()">Volver</button>
+</div>
+
+<script>
+const URL="https://script.google.com/macros/s/AKfycbzmniE67jcgAhtCKmf1axBYMGHpTbmEsqeN_DJYIHSREb3qnRgwaHS5sgNw2jQQvb8p/exec";
+let persona=null,usuario="";
+
+function verPedido(){toggle("pedido")}
+function verLogin(){toggle("login")}
+function volver(){toggle("menu")}
+
+function toggle(id){
+ document.querySelectorAll(".card").forEach(x=>x.classList.add("hidden"))
+ document.getElementById(id).classList.remove("hidden")
+}
+
+// buscar dni
+async function buscar(){
+ if(dni.value.length<6) return;
+
+ const r=await fetch(URL,{method:"POST",body:JSON.stringify({tipo:"buscar",dni:dni.value})});
+ const d=await r.json();
+
+ if(!d.ok){info.innerHTML="No encontrado";return;}
+
+ persona=d;
+
+ info.innerHTML=`
+ ${d.nombres} ${d.apellidos}<br>
+ Área: ${d.area}<br>
+ Guardia: ${d.guardia}`;
+}
+
+// enviar
+async function enviar(){
+
+ if(!persona){alert("DNI inválido");return;}
+
+ let epps=[];
+
+ if(Filtro.checked) epps.push({nombre:"Filtro",cantidad:+cFiltro.value});
+ if(Guantes.checked) epps.push({nombre:"Guantes",cantidad:+cGuantes.value});
+
+ const r=await fetch(URL,{method:"POST",body:JSON.stringify({tipo:"pedido",dni:dni.value,epps})});
+ const d=await r.json();
+
+ let html="";
+ d.detalle.forEach(x=>{
+  html+= x.estado=="ok" ? `✔ ${x.epp}<br>` : `❌ ${x.epp}: ${x.msg}<br>`;
+ });
+
+ res.innerHTML=html;
+}
+
+// login
+async function login(){
+ const r=await fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({tipo:"login",usuario:user.value,clave:pass.value})
+ });
+
+ const d=await r.json();
+
+ if(!d.ok){alert("Error");return;}
+
+ usuario=user.value;
+ toggle("admin");
+ cargar();
+}
+
+// listar
+async function cargar(){
+ const r=await fetch(URL,{method:"POST",body:JSON.stringify({tipo:"listar"})});
+ const d=await r.json();
+
+ let html="";
+ d.forEach(x=>{
+  html+=`${x.nombre} - ${x.epp} (${x.cant})
+  <button onclick="accion('${x.id}','${x.epp}','Entregado')">✔</button>
+  <button onclick="accion('${x.id}','${x.epp}','Rechazado')">❌</button><br>`;
+ });
+
+ lista.innerHTML=html;
+}
+
+// actualizar
+async function accion(id,epp,estado){
+ await fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({tipo:"estado",id,epp,estado,usuario})
+ });
+ cargar();
+}
+
+</script>
+</body>
+</html>
