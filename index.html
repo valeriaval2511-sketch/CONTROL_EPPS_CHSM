@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control EPP</title>
 
-<!-- FUENTE -->
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <style>
@@ -15,18 +14,10 @@
   --gris:#f4f6f8;
 }
 
-*{
-  box-sizing:border-box;
-  font-family:'Roboto', sans-serif;
-}
+*{box-sizing:border-box;font-family:'Roboto', sans-serif;}
 
-body{
-  margin:0;
-  background:var(--gris);
-  padding:12px;
-}
+body{margin:0;background:var(--gris);padding:12px;}
 
-/* CARD */
 .card{
   background:#fff;
   border-radius:16px;
@@ -35,24 +26,16 @@ body{
   box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* TITULO */
-h2{
-  margin:0 0 10px;
-  font-weight:500;
-  color:var(--verde);
-}
+h2{margin:0 0 10px;color:var(--verde)}
 
-/* INPUT */
 input{
   width:100%;
   padding:12px;
   margin:6px 0;
   border-radius:10px;
   border:1px solid #ddd;
-  font-size:14px;
 }
 
-/* BOTONES */
 button{
   width:100%;
   padding:12px;
@@ -61,53 +44,34 @@ button{
   border-radius:10px;
   background:var(--verde);
   color:white;
-  font-weight:500;
-  font-size:14px;
 }
 
-button:hover{
-  background:var(--verde-oscuro);
-}
+button:hover{background:var(--verde-oscuro)}
 
-/* TEXTO INFO */
-.info{
-  color:#777;
-  font-size:13px;
-  margin-top:6px;
-}
-
-/* EPP ITEM */
 .epp-item{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:10px;
   background:#f1f3f5;
-  border-radius:10px;
+  padding:10px;
   margin:6px 0;
+  border-radius:10px;
 }
 
-.epp-item label{
-  font-size:14px;
-}
-
-/* LISTA ADMIN */
 .lista-item{
   padding:10px;
   border-bottom:1px solid #eee;
-  font-size:14px;
 }
 
-/* BOTONES MINI */
 .btn-mini{
   width:auto;
   padding:6px 10px;
-  font-size:12px;
   border-radius:8px;
+  margin-right:5px;
 }
 
-.ok{background:#2e7d32;}
-.no{background:#c62828;}
+.ok{background:#2e7d32;color:white;}
+.no{background:#c62828;color:white;}
 
 .hidden{display:none}
 </style>
@@ -127,7 +91,7 @@ button:hover{
 
   <input id="dni" placeholder="Ingrese DNI" oninput="buscar()">
 
-  <div id="info" class="info"></div>
+  <div id="info" style="color:gray"></div>
 
   <div id="listaEPP"></div>
 
@@ -152,20 +116,40 @@ button:hover{
 </div>
 
 <script>
-const URL="https://script.google.com/macros/s/AKfycbwdlDFYSpCRZQRFLn0_5YS9U39APWY9Abxwbay6y2qYiatPJh_XpU1awd7fRJ20KXs/exec";
+
+const URL="https://script.google.com/macros/s/AKfycbwYZV_wylW9yugAftJR2FA590lqPdUMDrz_4SFvBNbw1iaxrg-EJGO6-KEMAH53bZbg/exec";
 let persona=null,usuario="";
 
-// navegación
-function verPedido(){toggle("pedido")}
-function verLogin(){toggle("login")}
-function volver(){toggle("menu")}
-
+// NAVEGACIÓN
 function toggle(id){
  document.querySelectorAll(".card").forEach(x=>x.classList.add("hidden"))
  document.getElementById(id).classList.remove("hidden")
 }
 
-// buscar
+function verPedido(){
+ limpiarPedido();
+ toggle("pedido");
+}
+
+function verLogin(){toggle("login")}
+function volver(){toggle("menu")}
+
+// LIMPIAR
+function limpiarPedido(){
+
+ dni.value="";
+ info.innerHTML="";
+ res.innerHTML="";
+ persona=null;
+
+ document.querySelectorAll("#listaEPP input[type=checkbox]").forEach(chk=>chk.checked=false);
+ document.querySelectorAll("#listaEPP input[type=number]").forEach(inp=>inp.value=1);
+
+ document.querySelectorAll("[id^='msg_']").forEach(x=>x.innerHTML="");
+ document.querySelectorAll("[id^='box_']").forEach(x=>x.style.background="#f1f3f5");
+}
+
+// BUSCAR DNI
 async function buscar(){
 
  if(dni.value.length < 6){
@@ -185,12 +169,42 @@ async function buscar(){
 
  persona=d;
 
- info.innerHTML=`
- <strong>${d.nombres} ${d.apellidos}</strong><br>
- Área: ${d.area} | Guardia: ${d.guardia}`;
+ info.innerHTML=`<b>${d.nombres} ${d.apellidos}</b><br>Área: ${d.area} | Guardia: ${d.guardia}`;
 }
 
-// enviar
+// VALIDAR EN VIVO
+async function validarUno(epp){
+
+ if(!dni.value || dni.value.length < 6) return;
+
+ const cantidad = document.getElementById("c_"+epp).value;
+
+ const r = await fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({
+    tipo:"validar",
+    dni:dni.value,
+    epps:[{nombre:epp,cantidad:Number(cantidad)}]
+  })
+ });
+
+ const d = await r.json();
+
+ const msg = document.getElementById("msg_"+epp);
+ const box = document.getElementById("box_"+epp);
+
+ if(d[0].ok){
+   msg.innerHTML="🟢 OK";
+   msg.style.color="green";
+   box.style.background="#e8f5e9";
+ }else{
+   msg.innerHTML="🔴 "+d[0].msg;
+   msg.style.color="red";
+   box.style.background="#ffebee";
+ }
+}
+
+// ENVIAR
 async function enviar(){
 
  if(!persona){alert("DNI inválido");return;}
@@ -207,6 +221,30 @@ async function enviar(){
 
  if(epps.length==0){alert("Selecciona al menos un EPP");return;}
 
+ // VALIDAR ANTES
+ const rVal = await fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({tipo:"validar",dni:dni.value,epps})
+ });
+
+ const validacion = await rVal.json();
+
+ let bloqueados = validacion.filter(x=>!x.ok);
+
+ if(bloqueados.length > 0){
+
+  let html="<div style='color:red;font-weight:bold'>No se puede solicitar:</div>";
+
+  bloqueados.forEach(x=>{
+    html+=`<div style="color:red">❌ ${x.epp} → ${x.msg}</div>`;
+  });
+
+  res.innerHTML=html;
+  res.scrollIntoView({behavior:"smooth"});
+  return;
+ }
+
+ // ENVÍO REAL
  const r=await fetch(URL,{
   method:"POST",
   body:JSON.stringify({tipo:"pedido",dni:dni.value,epps})
@@ -222,10 +260,12 @@ async function enviar(){
  });
 
  res.innerHTML=html;
+ res.scrollIntoView({behavior:"smooth"});
 }
 
-// login
+// LOGIN
 async function login(){
+
  const r=await fetch(URL,{
   method:"POST",
   body:JSON.stringify({tipo:"login",usuario:user.value,clave:pass.value})
@@ -233,19 +273,21 @@ async function login(){
 
  const d=await r.json();
 
- if(!d.ok){alert("Error");return;}
+ if(!d.ok){alert("Usuario o clave incorrecta");return;}
 
  usuario=user.value;
  toggle("admin");
  cargar();
 }
 
-// listar
+// LISTAR
 async function cargar(){
+
  const r=await fetch(URL,{method:"POST",body:JSON.stringify({tipo:"listar"})});
  const d=await r.json();
 
  let html="";
+
  d.forEach(x=>{
   html+=`
   <div class="lista-item">
@@ -261,33 +303,43 @@ async function cargar(){
  lista.innerHTML=html;
 }
 
-// actualizar
+// ACTUALIZAR
 async function accion(id,epp,estado){
+
  await fetch(URL,{
   method:"POST",
   body:JSON.stringify({tipo:"estado",id,epp,estado,usuario})
  });
+
  cargar();
 }
 
-// cargar epp
+// CARGAR EPP
 async function cargarEPP(){
+
  const r=await fetch(URL,{method:"POST",body:JSON.stringify({tipo:"epps"})});
  const data=await r.json();
 
  let html="";
+
  data.forEach(epp=>{
   html+=`
-  <div class="epp-item">
-    <label><input type="checkbox" id="${epp}"> ${epp}</label>
-    <input type="number" id="c_${epp}" value="1">
+  <div class="epp-item" id="box_${epp}">
+    <label>
+      <input type="checkbox" id="${epp}" onchange="validarUno('${epp}')">
+      ${epp}
+    </label>
+    <input type="number" id="c_${epp}" value="1" min="1" onchange="validarUno('${epp}')">
+    <span id="msg_${epp}" style="font-size:12px"></span>
   </div>`;
  });
 
  listaEPP.innerHTML=html;
 }
 
+// INICIO
 cargarEPP();
+
 </script>
 </body>
 </html>
