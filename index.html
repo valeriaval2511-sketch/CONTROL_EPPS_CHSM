@@ -130,6 +130,26 @@ button:hover{background:var(--verde-oscuro)}
 
 </div>
 
+<!-- LOGIN -->
+<div class="card hidden" id="login">
+
+  <input id="user" placeholder="Usuario">
+  <input id="pass" type="password" placeholder="Clave">
+
+  <button onclick="login()">Ingresar</button>
+  <button onclick="volver()">Volver</button>
+
+</div>
+
+<!-- ADMIN -->
+<div class="card hidden" id="admin">
+
+  <div id="lista"></div>
+
+  <button onclick="volver()">Volver</button>
+
+</div>
+
 <script>
 
 const URL="https://script.google.com/macros/s/AKfycbw50WzsCTuErQdWBPyyml5hEhxM5UgVNuXLukCPmRyhv5m0OoWvZ_Z-Xbkr69oNfG29/exec";
@@ -357,6 +377,78 @@ async function cargarEPP(){
  });
 
  listaEPP.innerHTML=html;
+}
+
+// IR A LOGIN
+function verLogin(){
+  toggle("login");
+}
+
+// LOGIN
+async function login(){
+
+ const r=await fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({
+    tipo:"login",
+    usuario:user.value,
+    clave:pass.value
+  })
+ });
+
+ const d=await r.json();
+
+ if(!d.ok){
+   alert("Usuario o clave incorrecta");
+   return;
+ }
+
+ toggle("admin");
+ cargarPendientes();
+}
+
+// CARGAR PEDIDOS
+async function cargarPendientes(){
+
+ const r=await fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({tipo:"listar"})
+ });
+
+ const data=await r.json();
+
+ let html="";
+
+ data.forEach(x=>{
+
+  html+=`
+  <div style="border-bottom:1px solid #eee;padding:10px">
+    <b>${x.nombre}</b><br>
+    ${x.epp} (${x.cant})<br>
+
+    <button onclick="accion('${x.id}','${x.epp}','Entregado')">✔ Entregar</button>
+    <button onclick="accion('${x.id}','${x.epp}','Rechazado')">❌ Rechazar</button>
+  </div>`;
+ });
+
+ lista.innerHTML=html;
+}
+
+// ACCIÓN
+async function accion(id,epp,estado){
+
+ await fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({
+    tipo:"estado",
+    id,
+    epp,
+    estado,
+    usuario:user.value
+  })
+ });
+
+ cargarPendientes();
 }
 
 cargarEPP();
