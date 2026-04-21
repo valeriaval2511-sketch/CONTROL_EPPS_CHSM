@@ -2,57 +2,160 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control EPP</title>
 
+<!-- FUENTE -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
 <style>
-body{font-family:Arial;background:#f4f6f8;padding:20px}
-.card{background:white;padding:15px;border-radius:10px;margin-bottom:10px}
-button{width:100%;padding:10px;margin:5px 0}
+:root{
+  --verde:#1b7f5f;
+  --verde-oscuro:#14664c;
+  --gris:#f4f6f8;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Roboto', sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--gris);
+  padding:12px;
+}
+
+/* CARD */
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* TITULO */
+h2{
+  margin:0 0 10px;
+  font-weight:500;
+  color:var(--verde);
+}
+
+/* INPUT */
+input{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:14px;
+}
+
+/* BOTONES */
+button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border:none;
+  border-radius:10px;
+  background:var(--verde);
+  color:white;
+  font-weight:500;
+  font-size:14px;
+}
+
+button:hover{
+  background:var(--verde-oscuro);
+}
+
+/* TEXTO INFO */
+.info{
+  color:#777;
+  font-size:13px;
+  margin-top:6px;
+}
+
+/* EPP ITEM */
+.epp-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  background:#f1f3f5;
+  border-radius:10px;
+  margin:6px 0;
+}
+
+.epp-item label{
+  font-size:14px;
+}
+
+/* LISTA ADMIN */
+.lista-item{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+}
+
+/* BOTONES MINI */
+.btn-mini{
+  width:auto;
+  padding:6px 10px;
+  font-size:12px;
+  border-radius:8px;
+}
+
+.ok{background:#2e7d32;}
+.no{background:#c62828;}
+
 .hidden{display:none}
-.info{color:gray}
 </style>
 </head>
 
 <body>
 
+<!-- MENU -->
 <div class="card" id="menu">
-<h2>Control EPP</h2>
-<button onclick="verPedido()">HACER PEDIDO</button>
-<button onclick="verLogin()">VALIDAR RECEPCIÓN</button>
+  <h2>Control EPP</h2>
+  <button onclick="verPedido()">Hacer pedido</button>
+  <button onclick="verLogin()">Validar recepción</button>
 </div>
 
+<!-- PEDIDO -->
 <div class="card hidden" id="pedido">
-<input id="dni" placeholder="DNI" oninput="buscar()">
-<div id="info" class="info"></div>
 
-<label><input type="checkbox" id="Filtro"> Filtro</label>
-<input type="number" id="cFiltro" value="1">
+  <input id="dni" placeholder="Ingrese DNI" oninput="buscar()">
 
-<label><input type="checkbox" id="Guantes"> Guantes</label>
-<input type="number" id="cGuantes" value="1">
+  <div id="info" class="info"></div>
 
-<button onclick="enviar()">Enviar</button>
-<button onclick="volver()">Volver</button>
+  <div id="listaEPP"></div>
 
-<div id="res"></div>
+  <button onclick="enviar()">Enviar solicitud</button>
+  <button onclick="volver()">Volver</button>
+
+  <div id="res"></div>
 </div>
 
+<!-- LOGIN -->
 <div class="card hidden" id="login">
-<input id="user" placeholder="Usuario">
-<input id="pass" type="password" placeholder="Clave">
-<button onclick="login()">Ingresar</button>
-<button onclick="volver()">Volver</button>
+  <input id="user" placeholder="Usuario">
+  <input id="pass" type="password" placeholder="Clave">
+  <button onclick="login()">Ingresar</button>
+  <button onclick="volver()">Volver</button>
 </div>
 
+<!-- ADMIN -->
 <div class="card hidden" id="admin">
-<div id="lista"></div>
-<button onclick="volver()">Volver</button>
+  <div id="lista"></div>
+  <button onclick="volver()">Volver</button>
 </div>
 
 <script>
-const URL="https://script.google.com/macros/s/AKfycbzmniE67jcgAhtCKmf1axBYMGHpTbmEsqeN_DJYIHSREb3qnRgwaHS5sgNw2jQQvb8p/exec";
+const URL="https://script.google.com/macros/s/AKfycbwdlDFYSpCRZQRFLn0_5YS9U39APWY9Abxwbay6y2qYiatPJh_XpU1awd7fRJ20KXs/exec";
 let persona=null,usuario="";
 
+// navegación
 function verPedido(){toggle("pedido")}
 function verLogin(){toggle("login")}
 function volver(){toggle("menu")}
@@ -62,21 +165,29 @@ function toggle(id){
  document.getElementById(id).classList.remove("hidden")
 }
 
-// buscar dni
+// buscar
 async function buscar(){
- if(dni.value.length<6) return;
+
+ if(dni.value.length < 6){
+   info.innerHTML="";
+   persona=null;
+   return;
+ }
 
  const r=await fetch(URL,{method:"POST",body:JSON.stringify({tipo:"buscar",dni:dni.value})});
  const d=await r.json();
 
- if(!d.ok){info.innerHTML="No encontrado";return;}
+ if(!d.ok){
+   info.innerHTML="No encontrado";
+   persona=null;
+   return;
+ }
 
  persona=d;
 
  info.innerHTML=`
- ${d.nombres} ${d.apellidos}<br>
- Área: ${d.area}<br>
- Guardia: ${d.guardia}`;
+ <strong>${d.nombres} ${d.apellidos}</strong><br>
+ Área: ${d.area} | Guardia: ${d.guardia}`;
 }
 
 // enviar
@@ -86,15 +197,28 @@ async function enviar(){
 
  let epps=[];
 
- if(Filtro.checked) epps.push({nombre:"Filtro",cantidad:+cFiltro.value});
- if(Guantes.checked) epps.push({nombre:"Guantes",cantidad:+cGuantes.value});
+ document.querySelectorAll("#listaEPP input[type=checkbox]").forEach(chk=>{
+   if(chk.checked){
+     const nombre=chk.id;
+     const cant=document.getElementById("c_"+nombre).value;
+     epps.push({nombre,cantidad:Number(cant)});
+   }
+ });
 
- const r=await fetch(URL,{method:"POST",body:JSON.stringify({tipo:"pedido",dni:dni.value,epps})});
+ if(epps.length==0){alert("Selecciona al menos un EPP");return;}
+
+ const r=await fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({tipo:"pedido",dni:dni.value,epps})
+ });
+
  const d=await r.json();
 
  let html="";
  d.detalle.forEach(x=>{
-  html+= x.estado=="ok" ? `✔ ${x.epp}<br>` : `❌ ${x.epp}: ${x.msg}<br>`;
+  html+= x.estado=="ok"
+  ? `<div style="color:green">✔ ${x.epp}</div>`
+  : `<div style="color:red">❌ ${x.epp}: ${x.msg}</div>`;
  });
 
  res.innerHTML=html;
@@ -123,9 +247,15 @@ async function cargar(){
 
  let html="";
  d.forEach(x=>{
-  html+=`${x.nombre} - ${x.epp} (${x.cant})
-  <button onclick="accion('${x.id}','${x.epp}','Entregado')">✔</button>
-  <button onclick="accion('${x.id}','${x.epp}','Rechazado')">❌</button><br>`;
+  html+=`
+  <div class="lista-item">
+    <b>${x.nombre}</b><br>
+    ${x.epp} (${x.cant})
+    <div>
+      <button class="btn-mini ok" onclick="accion('${x.id}','${x.epp}','Entregado')">✔</button>
+      <button class="btn-mini no" onclick="accion('${x.id}','${x.epp}','Rechazado')">✖</button>
+    </div>
+  </div>`;
  });
 
  lista.innerHTML=html;
@@ -140,6 +270,24 @@ async function accion(id,epp,estado){
  cargar();
 }
 
+// cargar epp
+async function cargarEPP(){
+ const r=await fetch(URL,{method:"POST",body:JSON.stringify({tipo:"epps"})});
+ const data=await r.json();
+
+ let html="";
+ data.forEach(epp=>{
+  html+=`
+  <div class="epp-item">
+    <label><input type="checkbox" id="${epp}"> ${epp}</label>
+    <input type="number" id="c_${epp}" value="1">
+  </div>`;
+ });
+
+ listaEPP.innerHTML=html;
+}
+
+cargarEPP();
 </script>
 </body>
 </html>
