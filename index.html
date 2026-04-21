@@ -86,10 +86,21 @@ button:hover{background:var(--verde-oscuro)}
   <h2>Control EPP</h2>
   <button onclick="verPedido()">Hacer pedido</button>
   <button onclick="verLogin()">Validar recepción</button>
+  <button onclick="verMisPedidos()">Ver mis pedidos</button>
 </div>
 
 <!-- PEDIDO -->
-<div class="card hidden" id="pedido">
+<div class="card hidden" id="misPedidos">
+
+  <input id="dniConsulta" placeholder="Ingrese DNI">
+
+  <button onclick="buscarMisPedidos()">Buscar</button>
+
+  <div id="resultadoPedidos"></div>
+
+  <button onclick="volver()">Volver</button>
+
+</div>
 
   <!-- PASO 1 -->
   <div id="paso1" class="fade show">
@@ -121,7 +132,7 @@ button:hover{background:var(--verde-oscuro)}
 
 <script>
 
-const URL="https://script.google.com/macros/s/AKfycby1Vw7N_Go_YNF598TaTEvlWbpc9wWWQwFNaHpUZ3QbCXPQaNT4oxMarc5wUegw9Ijl/exec";
+const URL="https://script.google.com/macros/s/AKfycbzFUheppMgW0klFFy-fdMAOtrcLaVKjeXm8CK9_ejqfrtRAq48iz95JuzA_rBSMGQoi/exec";
 let persona=null;
 
 // NAV
@@ -301,6 +312,53 @@ function continuarPedido(){
   cambiarPaso("paso1","paso2");
 }
 
+function verMisPedidos(){
+  toggle("misPedidos");
+}
+
+async function buscarMisPedidos(){
+
+  const dni = document.getElementById("dniConsulta").value;
+
+  if(dni.length < 6){
+    alert("Ingrese DNI válido");
+    return;
+  }
+
+  const r = await fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({tipo:"mis_pedidos",dni})
+  });
+
+  const data = await r.json();
+
+  let html = "";
+
+  if(data.length == 0){
+    html = "No tienes pedidos registrados";
+  }else{
+
+    data.forEach(x=>{
+
+      let color = "#999";
+
+      if(x.estado == "Pendiente") color = "orange";
+      if(x.estado == "Entregado") color = "green";
+      if(x.estado == "Rechazado") color = "red";
+
+      html += `
+      <div style="border-bottom:1px solid #eee;padding:8px">
+        <b>${x.epp}</b> (${x.cantidad})<br>
+        ${x.fecha}<br>
+        <span style="color:${color}">${x.estado}</span>
+      </div>
+      `;
+    });
+
+  }
+
+  resultadoPedidos.innerHTML = html;
+}
 cargarEPP();
 
 </script>
