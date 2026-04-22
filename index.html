@@ -277,7 +277,7 @@ async function validarUno(epp){
  const checkbox = document.getElementById(epp);
  const box = document.getElementById("box_"+epp);
 
- // 🔴 SI NO ESTÁ MARCADO → LIMPIAR TODO
+ // SI NO ESTÁ MARCADO → LIMPIAR TODO
  if(!checkbox.checked){
    box.style.background = "#fff";
    return;
@@ -451,7 +451,7 @@ async function cargarEPP(){
          <span>${epp}</span>
        </div>
 
-       <input type="number" id="c_${epp}" value="1" onchange="validarUno('${epp}')"> style="height:30px;font-size:13px">
+       <input type="number" id="c_${epp}" value="1" onchange="validarUno('${epp}')" style="height:30px;font-size:13px">
 
      </div>`;
    });
@@ -460,6 +460,12 @@ async function cargarEPP(){
  }
 
  listaEPP.innerHTML=html;
+}
+
+function toggleCheck(epp){
+  const chk = document.getElementById(epp);
+  chk.checked = !chk.checked;
+  validarUno(epp);
 }
 
 function toggleCategoria(cat){
