@@ -447,7 +447,7 @@ async function cargarEPP(){
      <div class="epp-item" id="box_${epp}">
 
        <div style="display:flex;align-items:center;gap:6px">
-         <input type="checkbox" id="${epp}" onchange="validarUno('${epp}')">
+         <input type="checkbox" id="${epp}" onchange="event.stopPropagation(); validarUno('${epp}')">
          <span>${epp}</span>
        </div>
 
