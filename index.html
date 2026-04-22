@@ -61,18 +61,50 @@ button:hover{background:var(--verde-oscuro)}
 
 .epp-item{
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#f1f3f5;
+  flex-direction:column;
+  background:#fff;
+  border:1px solid #e0e0e0;
   padding:10px;
-  margin:6px 0;
   border-radius:10px;
+  font-size:13px;
+  gap:6px;
 }
 
 .hidden{display:none}
 
 #paso1, #paso2{
   transition: all 0.3s ease;
+}
+
+#listaEPP{
+  display:block;
+}
+
+.grupoEPP{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap:10px;
+}
+
+input{
+  font-size:14px;
+}
+
+.epp-item{
+  background:#fff;
+  border:1px solid #e0e0e0;
+  border-radius:10px;
+  padding:10px;
+  transition:0.2s;
+  cursor:pointer;
+}
+
+.epp-item:hover{
+  transform:scale(1.03);
+}
+
+.epp-item input[type="number"]{
+  width:60px;
 }
 </style>
 </head>
@@ -104,6 +136,8 @@ button:hover{background:var(--verde-oscuro)}
   <div id="paso2" style="display:none; opacity:0;">
 
     <div id="infoConfirmado" style="font-weight:bold;margin-bottom:10px"></div>
+
+    <input id="buscarEPP" placeholder="Buscar EPP..." oninput="filtrarEPP()" style="margin-bottom:10px">
 
     <button onclick="verMisPedidosUsuario()">Ver mis pedidos</button>
 
@@ -152,7 +186,7 @@ button:hover{background:var(--verde-oscuro)}
 
 <script>
 
-const URL="https://script.google.com/macros/s/AKfycbw50WzsCTuErQdWBPyyml5hEhxM5UgVNuXLukCPmRyhv5m0OoWvZ_Z-Xbkr69oNfG29/exec";
+const URL="https://script.google.com/macros/s/AKfycbywRzUelSpnm7YZgqSYa8g32tXAX7Bj7oLwZT7IONx3jiAyXm3_bf_Fo-7qwL9XTq5E/exec";
 let persona=null;
 
 // NAV
@@ -362,21 +396,110 @@ async function cargarMisPedidos(){
 // CARGAR EPP
 async function cargarEPP(){
 
- const r=await fetch(URL,{method:"POST",body:JSON.stringify({tipo:"epps"})});
+ const r=await fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({tipo:"epps"})
+ });
+
  const data=await r.json();
+
+ let grupos = {};
+
+ // 🔷 AGRUPAR POR CATEGORIA
+ data.forEach(epp=>{
+
+   if(!grupos[epp.categoria]){
+     grupos[epp.categoria] = [];
+   }
+
+   grupos[epp.categoria].push(epp.nombre);
+
+ });
 
  let html="";
 
- data.forEach(epp=>{
-  html+=`
-  <div class="epp-item" id="box_${epp}">
-    <label><input type="checkbox" id="${epp}" onchange="validarUno('${epp}')">${epp}</label>
-    <input type="number" id="c_${epp}" value="1">
-    <span id="msg_${epp}"></span>
-  </div>`;
- });
+ // 🔷 CREAR BLOQUES
+ for(let cat in grupos){
+
+   html += `
+   <div onclick="toggleCategoria('${cat}')" style="
+     margin-top:12px;
+     font-weight:bold;
+     color:#1b7f5f;
+     display:flex;
+     justify-content:space-between;
+     cursor:pointer;
+   ">
+    ${cat}
+    <span id="icon_${cat}">▼</span>
+  </div>
+  `;
+
+   html += `<div class="grupoEPP" id="grupo_${cat}">`;
+
+   grupos[cat].forEach(epp=>{
+
+     html+=`
+     <div class="epp-item" id="box_${epp}">
+
+       <div style="display:flex;align-items:center;gap:6px">
+         <input type="checkbox" id="${epp}" onchange="validarUno('${epp}')">
+         <span>${epp}</span>
+       </div>
+
+       <input type="number" id="c_${epp}" value="1" style="height:30px;font-size:13px">
+
+       <span id="msg_${epp}" style="font-size:11px"></span>
+
+     </div>`;
+   });
+
+   html += `</div>`;
+ }
 
  listaEPP.innerHTML=html;
+}
+
+function toggleCategoria(cat){
+
+  const grupo = document.getElementById("grupo_"+cat);
+  const icon = document.getElementById("icon_"+cat);
+
+  if(grupo.style.display === "none"){
+    grupo.style.display = "grid";
+    icon.innerHTML = "▼";
+  }else{
+    grupo.style.display = "none";
+    icon.innerHTML = "►";
+  }
+}
+
+
+function filtrarEPP(){
+
+  const texto = document.getElementById("buscarEPP").value.toLowerCase();
+
+  document.querySelectorAll(".grupoEPP").forEach(grupo => {
+
+    let visible = false;
+
+    grupo.querySelectorAll(".epp-item").forEach(item => {
+
+      const nombre = item.innerText.toLowerCase();
+
+      if(nombre.includes(texto)){
+        item.style.display = "flex";
+        visible = true;
+      }else{
+        item.style.display = "none";
+      }
+
+    });
+
+    // 🔷 ocultar categoria si no hay resultados
+    grupo.style.display = visible ? "grid" : "none";
+
+  });
 }
 
 // IR A LOGIN
