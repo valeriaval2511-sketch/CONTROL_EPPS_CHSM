@@ -82,7 +82,7 @@ button:hover{background:var(--verde-oscuro)}
 
 .grupoEPP{
   display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap:10px;
 }
 
@@ -102,10 +102,39 @@ input{
 .epp-item:hover{
   transform:scale(1.03);
 }
+.epp-item{
+  overflow:hidden;
+}
 
 .epp-item input[type="number"]{
   width:60px;
 }
+
+.epp-item span{
+  font-size:12px;
+  word-break: break-word;
+}
+
+@media (max-width:600px){
+
+  body{
+    padding:8px;
+  }
+
+  .card{
+    padding:12px;
+  }
+
+  button{
+    height:44px;
+  }
+
+  .grupoEPP{
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
 </style>
 </head>
 
@@ -446,7 +475,7 @@ async function cargarEPP(){
      html+=`
      <div class="epp-item" id="box_${epp}">
 
-       <div style="display:flex;align-items:center;gap:6px">
+       <div style="display:flex;flex-direction:column;gap:6px">
          <input type="checkbox" id="${epp}" onchange="event.stopPropagation(); validarUno('${epp}')">
          <span>${epp}</span>
        </div>
