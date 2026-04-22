@@ -274,9 +274,18 @@ function continuarPedido(){
 // VALIDAR EN VIVO
 async function validarUno(epp){
 
- const cantidad=document.getElementById("c_"+epp).value;
+ const checkbox = document.getElementById(epp);
+ const box = document.getElementById("box_"+epp);
 
- const r=await fetch(URL,{
+ // 🔴 SI NO ESTÁ MARCADO → LIMPIAR TODO
+ if(!checkbox.checked){
+   box.style.background = "#fff";
+   return;
+ }
+
+ const cantidad = document.getElementById("c_"+epp).value;
+
+ const r = await fetch(URL,{
   method:"POST",
   body:JSON.stringify({
     tipo:"validar",
@@ -285,17 +294,12 @@ async function validarUno(epp){
   })
  });
 
- const d=await r.json();
-
- const msg=document.getElementById("msg_"+epp);
- const box=document.getElementById("box_"+epp);
+ const d = await r.json();
 
  if(d[0].ok){
-   msg.innerHTML="🟢 OK";
-   box.style.background="#e8f5e9";
+   box.style.background = "#e8f5e9"; // verde suave
  }else{
-   msg.innerHTML="🔴 "+d[0].msg;
-   box.style.background="#ffebee";
+   box.style.background = "#ffebee"; // rojo suave
  }
 }
 
@@ -447,9 +451,7 @@ async function cargarEPP(){
          <span>${epp}</span>
        </div>
 
-       <input type="number" id="c_${epp}" value="1" style="height:30px;font-size:13px">
-
-       <span id="msg_${epp}" style="font-size:11px"></span>
+       <input type="number" id="c_${epp}" value="1" onchange="validarUno('${epp}')"> style="height:30px;font-size:13px">
 
      </div>`;
    });
