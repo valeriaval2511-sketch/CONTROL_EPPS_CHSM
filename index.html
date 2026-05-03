@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Control EPP</title>
+
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="card" id="menu">
+  <h2>Control EPP</h2>
+  <button onclick="verPedido()">Hacer pedido</button>
+  <button onclick="verLogin()">Validar recepción</button>
+</div>
+
+<div class="card hidden" id="pedido">
+
+  <div id="paso1">
+    <input id="dni" placeholder="Ingrese DNI">
+    <button onclick="verificarDNI()">Verificar</button>
+    <div id="info"></div>
+  </div>
+
+  <div id="paso2" class="hidden">
+    <div id="infoConfirmado"></div>
+
+    <input id="buscarEPP" placeholder="Buscar EPP..." oninput="filtrarEPP()">
+
+    <button onclick="verMisPedidosUsuario()">Ver mis pedidos</button>
+
+    <div id="listaEPP"></div>
+
+    <button onclick="enviar()">Enviar solicitud</button>
+  </div>
+
+  <button onclick="volver()">Volver</button>
+  <div id="res"></div>
+
+</div>
+
+<div class="card hidden" id="misPedidosUsuario">
+  <div id="tituloPedidos"></div>
+  <div id="resultadoPedidos"></div>
+  <button onclick="volver()">Volver</button>
+</div>
+
+<div class="card hidden" id="login">
+  <input id="user" placeholder="Usuario">
+  <input id="pass" type="password" placeholder="Clave">
+
+  <button onclick="login()">Ingresar</button>
+  <button onclick="volver()">Volver</button>
+</div>
+
+<div class="card hidden" id="admin">
+
+  <h2>Pedidos Pendientes</h2>
+
+  <input type="date" id="fFecha">
+
+  <select id="fArea"></select>
+
+  <select id="fGuardia"></select>
+
+  <input type="text" id="fDni" placeholder="DNI">
+
+  <button onclick="aplicarFiltros()">Aplicar filtros</button>
+
+  <button onclick="limpiarFiltros()">Limpiar filtros</button>
+
+  <h3>Kardex PDF</h3>
+
+  <input type="date" id="pdfDesde">
+
+  <input type="date" id="pdfHasta">
+
+  <select id="pdfArea"></select>
+
+  <select id="pdfGuardia"></select>
+
+  <button onclick="generarPDF()">
+  Generar Kardex PDF
+  </button>
+
+  <div id="lista"></div>
+
+  <button onclick="volver()">Volver</button>
+
+</div>
+
+<script src="app2.js"></script>
+</body>
+</html>
